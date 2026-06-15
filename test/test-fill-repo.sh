@@ -10,37 +10,36 @@ REPO=${2:-"repoA"}
 GBACKUP_DIR=${3:-"../src"}
 BACKUP_DIR=${4:-"backups"}
 
-GBACKUP_DIR=`readlink -f ${GBACKUP_DIR}`
-BACKUP_DIR=`readlink -f ${BACKUP_DIR}`
+GBACKUP_DIR=$(readlink -f "${GBACKUP_DIR}")
+BACKUP_DIR=$(readlink -f "${BACKUP_DIR}")
 
-if [ ! -f ${GBACKUP_DIR}/backup-git.sh ]; then
-	echo "${GBACKUP_DIR}/backup-git.sh does not exist!"
+if [ ! -f "${GBACKUP_DIR}/backup-git.sh" ]; then
+	echo "${GBACKUP_DIR}/backup-git.sh does not exist!" >&2
 	exit 1
 fi
 
-if [ ! -d ${BACKUP_DIR} ]; then
-	mkdir ${BACKUP_DIR}
+if [ ! -d "${BACKUP_DIR}" ]; then
+	mkdir -p "${BACKUP_DIR}"
 fi
 
 # clone repository from bundle if it does not exist yet
-if [ ! -d ${REPO} ]; then
-	git clone ${SRC_BUNDLE} ${REPO}
+if [ ! -d "${REPO}" ]; then
+	git clone "${SRC_BUNDLE}" "${REPO}"
 fi
 
 # switch to repository directory
-oldDir=`pwd`
-cd ${REPO}
+oldDir=$(pwd)
+cd "${REPO}" || exit 1
 
 # change files in repository
 echo "AAA" >> A
 
 # commit
-datetime=`date +%Y%m%d-%H%M%S`
+datetime=$(date +%Y%m%d-%H%M%S)
 git commit -am "changes ${datetime}"
 
 # return to original directory
-cd ${oldDir}
+cd "${oldDir}" || exit 1
 
 # run backup
-${GBACKUP_DIR}/backup-git.sh ${REPO} ${BACKUP_DIR} 
-
+"${GBACKUP_DIR}/backup-git.sh" "${REPO}" "${BACKUP_DIR}"

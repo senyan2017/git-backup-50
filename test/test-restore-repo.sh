@@ -12,31 +12,32 @@ BACKUP_DIR=${3:-"backups"}
 
 RESTORE_DIR="/tmp/git"
 
-GBACKUP_DIR=`readlink -f ${GBACKUP_DIR}`
-BACKUP_DIR=`readlink -f ${BACKUP_DIR}`
+GBACKUP_DIR=$(readlink -f "${GBACKUP_DIR}")
+BACKUP_DIR=$(readlink -f "${BACKUP_DIR}")
 
-if [ ! -f ${GBACKUP_DIR}/backup-git-restore.sh ]; then
-	echo "ERROR: ${GBACKUP_DIR}/backup-git-restore.sh does not exist!"
+if [ ! -f "${GBACKUP_DIR}/backup-git-restore.sh" ]; then
+	echo "ERROR: ${GBACKUP_DIR}/backup-git-restore.sh does not exist!" >&2
 	exit 1
 fi
 
-if [ ! -d ${BACKUP_DIR} ]; then
-	echo "ERROR: ${BACKUP_DIR} does not exist!"
+if [ ! -d "${BACKUP_DIR}" ]; then
+	echo "ERROR: ${BACKUP_DIR} does not exist!" >&2
 	exit 1
 fi
 
-oldDir=`pwd`
+oldDir=$(pwd)
 
-cd ${BACKUP_DIR} 
+cd "${BACKUP_DIR}" || exit 1
 
-${GBACKUP_DIR}/backup-git-restore.sh ${RESTORE_DIR} ${REPO}
+"${GBACKUP_DIR}/backup-git-restore.sh" "${RESTORE_DIR}" "${REPO}"
 rc=$?
 
-if [ ${rc} != 0 ]; then
+if [ "${rc}" != 0 ]; then
 	echo "ERROR"
 else
 	echo "OK"
 fi
 
-cd ${oldDir}
+cd "${oldDir}" || exit 1
 
+exit "${rc}"
