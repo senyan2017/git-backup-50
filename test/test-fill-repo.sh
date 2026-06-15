@@ -19,7 +19,7 @@ if [ ! -f ${GBACKUP_DIR}/backup-git.sh ]; then
 fi
 
 if [ ! -d ${BACKUP_DIR} ]; then
-	mkdir ${BACKUP_DIR}
+	mkdir -p ${BACKUP_DIR}
 fi
 
 # clone repository from bundle if it does not exist yet
@@ -41,6 +41,5 @@ git commit -am "changes ${datetime}"
 # return to original directory
 cd ${oldDir}
 
-# run backup
-${GBACKUP_DIR}/backup-git.sh ${REPO} ${BACKUP_DIR} 
-
+# run backup (single repo path → script finds .git inside it)
+${GBACKUP_DIR}/backup-git.sh ${REPO} ${BACKUP_DIR}

@@ -25,11 +25,8 @@ if [ ! -d ${BACKUP_DIR} ]; then
 	exit 1
 fi
 
-oldDir=`pwd`
-
-cd ${BACKUP_DIR} 
-
-${GBACKUP_DIR}/backup-git-restore.sh ${RESTORE_DIR} ${REPO}
+# restore using new interface: <restore_dir> <backup_dir> --repo <name>
+${GBACKUP_DIR}/backup-git-restore.sh --repo ${REPO} ${RESTORE_DIR} ${BACKUP_DIR}
 rc=$?
 
 if [ ${rc} != 0 ]; then
@@ -37,6 +34,3 @@ if [ ${rc} != 0 ]; then
 else
 	echo "OK"
 fi
-
-cd ${oldDir}
-
