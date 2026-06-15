@@ -1,42 +1,42 @@
 #!/bin/sh
 #
-# Restores a git repository from bundle files
-# using backup-git-restore.sh.
-# The restored repository is saved in /tmp/git/
+# test-restore-repo.sh - restore a test repository from its backup bundles.
+#
+# Usage: test-restore-repo.sh [<repo_name>] [<src_dir>] [<backup_dir>]
+#
+# Steps:
+#   1. Locate the restore script and the backup directory.
+#   2. Run backup-git-restore.sh from inside the backup directory.
+#   3. Report pass/fail so the caller can tell backup vs. restore failures apart.
 #
 
-REPO=${1:-"repoA"}
+. "$(dirname "$0")/lib_test.sh"
 
-GBACKUP_DIR=${2:-"../src"}
-BACKUP_DIR=${3:-"backups"}
+# ── Arguments ─────────────────────────────────────────────────────────────────
 
-RESTORE_DIR="/tmp/git"
+REPO="${1:-${REPO_NAME}}"
+GBACKUP_DIR="$(resolve_path "${2:-${GBACKUP_DIR}}")"
+BACKUP_DIR="$(resolve_path "${3:-${BACKUP_DIR}}")"
 
-GBACKUP_DIR=`readlink -f ${GBACKUP_DIR}`
-BACKUP_DIR=`readlink -f ${BACKUP_DIR}`
+# ── Step 1: Preconditions ─────────────────────────────────────────────────────
 
-if [ ! -f ${GBACKUP_DIR}/backup-git-restore.sh ]; then
-	echo "ERROR: ${GBACKUP_DIR}/backup-git-restore.sh does not exist!"
-	exit 1
-fi
+require_file "${GBACKUP_DIR}/backup-git-restore.sh" "restore script"
+require_dir  "${BACKUP_DIR}"                        "backup dir '${BACKUP_DIR}'"
 
-if [ ! -d ${BACKUP_DIR} ]; then
-	echo "ERROR: ${BACKUP_DIR} does not exist!"
-	exit 1
-fi
+# ── Step 2: Run restore ───────────────────────────────────────────────────────
 
-oldDir=`pwd`
+phase_restore "restoring '${REPO}' from bundles in '${BACKUP_DIR}'"
 
-cd ${BACKUP_DIR} 
-
-${GBACKUP_DIR}/backup-git-restore.sh ${RESTORE_DIR} ${REPO}
+enter_dir "${BACKUP_DIR}"
+"${GBACKUP_DIR}/backup-git-restore.sh" "${RESTORE_DIR}" "${REPO}"
 rc=$?
+leave_dir
 
-if [ ${rc} != 0 ]; then
-	echo "ERROR"
+# ── Step 3: Report ────────────────────────────────────────────────────────────
+
+if [ "${rc}" -eq 0 ]; then
+	phase_restore "OK — '${REPO}' restored to '${RESTORE_DIR}/${REPO}'"
 else
-	echo "OK"
+	phase_restore "FAIL — restore exited with ${rc}"
+	exit "${rc}"
 fi
-
-cd ${oldDir}
-
