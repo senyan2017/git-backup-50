@@ -2,8 +2,8 @@ git-backup
 ==========
 Simple shell scripts for creating and restoring incremental backups of git repositories using git bundles.
 
-The backup routine uses git `bundle create --all last_backup_tag..master` to create incremental bundles.
-After restoring the backup only the `master` branch will be restored.
+The backup routine uses `git bundle create --all lastBackup..<current-branch>` to create incremental bundles.
+The current branch is detected automatically via `HEAD` (no longer hardcoded to `master`).
 
 Backup
 ----------
@@ -17,24 +17,40 @@ Create backups of multiple repositories located in `~/projects` and save them in
 backup-git.sh ~/projects /backup
 ```
 
+Paths with spaces and special characters are supported — just quote them as usual:
+```
+backup-git.sh "/path/to/my projects" "/my backup dir"
+```
+
 Restore
 ----------
-In order to restore a repository named `repository` into `/tmp/git/repository`,
-run the restore script from the directory containing `repository_*.bundle` files:
+Restore a repository named `repository` into `/tmp/git/repository` from bundle files
+located in the current directory:
 
 ```
 backup-git-restore.sh /tmp/git repository
 ```
 
+Or specify the bundle directory explicitly (recommended):
+
+```
+backup-git-restore.sh /tmp/git repository /path/to/bundles
+```
+
+If no matching bundle files are found, the script exits with an error instead of silently doing nothing.
+
 Testing
 ----------
-The simplified test suite clones a repository from a bundle file, 
-simulates a few commits and runs the backup after every single commit.
+The test suite covers:
 
-Afterwards the repository is restored from multiple bundle files.
+* Basic incremental backup and restore
+* Paths containing spaces and special characters
+* Missing bundle files (graceful error)
+* Invalid source/destination directories
+* Partially existing restore targets
+* Usage messages on missing arguments
 
 ```
 cd test
 ./run.sh
 ```
-
