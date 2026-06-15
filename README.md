@@ -28,13 +28,24 @@ backup-git-restore.sh /tmp/git repository
 
 Testing
 ----------
-The simplified test suite clones a repository from a bundle file, 
-simulates a few commits and runs the backup after every single commit.
+The test suite runs two clearly separated phases so a failure points at the
+side that broke:
 
-Afterwards the repository is restored from multiple bundle files.
+* **backup phase** – clone a repository from a bundle file, then repeatedly
+  commit a change and create an incremental bundle (exercises `backup-git.sh`).
+* **restore phase** – rebuild the repository from those bundles into
+  `/tmp/git` (exercises `backup-git-restore.sh`).
+
+It prints `OK`/`ERROR` and exits non-zero if either phase fails.
 
 ```
 cd test
 ./run.sh
 ```
+
+Layout
+----------
+* `src/backup-git.sh`, `src/backup-git-restore.sh` – the backup and restore CLIs.
+* `src/lib-git-backup.sh` – shared logging / error-handling / precondition helpers, sourced by both scripts.
+* `test/run.sh` – the two-phase test runner; `test/test-*.sh` are its steps and `test/lib-test.sh` holds shared test helpers.
 

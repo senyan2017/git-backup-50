@@ -1,46 +1,38 @@
 #!/bin/sh
 #
-# Clones a git repository from repo.bundle file if it does not exist yet,
-# simulates changes and creates an incremental backup bundle
-# using backup-git.sh.
+# One iteration of the backup chain test:
+#   1. make sure a working repository exists (cloned from repo.bundle),
+#   2. simulate a change and commit it,
+#   3. create an incremental backup bundle using backup-git.sh.
 #
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "${SCRIPT_DIR}/lib-test.sh"
 
 SRC_BUNDLE=${1:-"repo.bundle"}
 REPO=${2:-"repoA"}
-GBACKUP_DIR=${3:-"../src"}
-BACKUP_DIR=${4:-"backups"}
+GBACKUP_DIR=$(resolve_dir "${3:-../src}")
+BACKUP_DIR=$(resolve_dir "${4:-backups}")
 
-GBACKUP_DIR=`readlink -f ${GBACKUP_DIR}`
-BACKUP_DIR=`readlink -f ${BACKUP_DIR}`
+# ensure_clone: clone the working repository from the seed bundle once.
+ensure_clone() {
+	[ -d "${REPO}" ] || git clone "${SRC_BUNDLE}" "${REPO}"
+}
 
-if [ ! -f ${GBACKUP_DIR}/backup-git.sh ]; then
-	echo "${GBACKUP_DIR}/backup-git.sh does not exist!"
-	exit 1
-fi
+# simulate_commit: produce one dummy change and commit it.
+simulate_commit() {
+	(
+		cd "${REPO}" || exit 1
+		echo "AAA" >> A
+		git commit -am "changes $(date +%Y%m%d-%H%M%S)"
+	)
+}
 
-if [ ! -d ${BACKUP_DIR} ]; then
-	mkdir ${BACKUP_DIR}
-fi
+require_file "${GBACKUP_DIR}/backup-git.sh"
+[ -d "${BACKUP_DIR}" ] || mkdir "${BACKUP_DIR}"
 
-# clone repository from bundle if it does not exist yet
-if [ ! -d ${REPO} ]; then
-	git clone ${SRC_BUNDLE} ${REPO}
-fi
+ensure_clone
+simulate_commit
 
-# switch to repository directory
-oldDir=`pwd`
-cd ${REPO}
-
-# change files in repository
-echo "AAA" >> A
-
-# commit
-datetime=`date +%Y%m%d-%H%M%S`
-git commit -am "changes ${datetime}"
-
-# return to original directory
-cd ${oldDir}
-
-# run backup
-${GBACKUP_DIR}/backup-git.sh ${REPO} ${BACKUP_DIR} 
-
+# Run the backup under test.
+"${GBACKUP_DIR}/backup-git.sh" "${REPO}" "${BACKUP_DIR}"
