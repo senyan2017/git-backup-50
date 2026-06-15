@@ -1,8 +1,10 @@
 #!/bin/sh
 #
 # Clones a git repository from repo.bundle file if it does not exist yet,
-# simulates changes and creates an incremental backup bundle
-# using backup-git.sh.
+# simulates a change and creates an incremental backup bundle using
+# backup-git.sh (default nested layout).
+#
+# Usage: test-fill-repo.sh [src_bundle] [repo] [gbackup_dir] [backup_dir]
 #
 
 SRC_BUNDLE=${1:-"repo.bundle"}
@@ -31,6 +33,10 @@ fi
 oldDir=`pwd`
 cd ${REPO}
 
+# make sure commits work in any environment (no global git identity needed)
+git config user.email "test@example.com"
+git config user.name "git-backup test"
+
 # change files in repository
 echo "AAA" >> A
 
@@ -42,5 +48,4 @@ git commit -am "changes ${datetime}"
 cd ${oldDir}
 
 # run backup
-${GBACKUP_DIR}/backup-git.sh ${REPO} ${BACKUP_DIR} 
-
+${GBACKUP_DIR}/backup-git.sh ${REPO} ${BACKUP_DIR}

@@ -40,3 +40,5 @@ fi
 
 cd ${oldDir}
 
+exit ${rc}
+
